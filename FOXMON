@@ -60,7 +60,7 @@ public class Carte
 			return true;
 		}		
 	}
-	
+	 
 	public bool EstHauteHerbe(int x, int y)
 	{
 		if(x < 0 || y < 0 || x >= Largeur || y >= Hauteur || (grille[x, y] == '*')){
@@ -87,6 +87,7 @@ public class Dresseur{
 		Equipe = new List<Foxmon>();
 		
 	}
+
 }
 
 public class Foxmon{
@@ -107,16 +108,73 @@ public class Foxmon{
 		Speed = speed;
 		TypeElementaire = typeElementaire;
 	}
+
+	public void AfficherInfo()
+	{
+		Console.WriteLine($" Voici {Nom}, ");
+	}
+
+
 }
 public class Program
 {
 	public static void Main()
 	{
 		Carte carte1 = new Carte();
-		while(true)
-		{
+		Dresseur joueur = new Dresseur("babacar", 1, 1);
+		
+			while(true){
+			int posX = joueur.X;
+			int posY = joueur.Y;
+
 			Console.Clear();
 			carte1.Afficher();	
-		}
+
+			Console.SetCursorPosition(posX, posY);
+			Console.WriteLine('P');
+
+			ConsoleKey key = Console.ReadKey(true).Key;
+
+			int newX = joueur.X;
+			int newY = joueur.Y;
+			if(key == ConsoleKey.UpArrow){
+                newY--;
+            };
+
+            if(key == ConsoleKey.DownArrow)
+            {
+				newY++;
+                 
+            };
+
+            if(key == ConsoleKey.RightArrow)
+            {
+                newX++;
+            };
+
+            if(key == ConsoleKey.LeftArrow)
+            {
+               newX--;;  
+            };
+
+			if(carte1.EstTraversable(newX,newY)){
+				joueur.X = newX;
+				joueur.Y = newY;
+			}
+
+			if(carte1.EstHauteHerbe(newX, newY))
+			{
+				Random rnd = new Random();
+				int nbr = rnd.Next(0,101);
+				if(nbr >= 0 && nbr <= 20)
+				{
+					Console.WriteLine($"");
+				}
+				else
+				{
+					
+				}
+			} 
+			}
 	}
 }
