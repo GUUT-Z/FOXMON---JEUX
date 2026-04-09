@@ -76,3 +76,5 @@ Le tableau des multiplicateurs de dégâts
 | Roche            | Sol          | 0.5            |
 | Roche            | Électrique   | 1              |
 | Roche            | Roche        | 0.5            |
+
+fonction qui récupère les types et faire un tableau à double dimensions.
