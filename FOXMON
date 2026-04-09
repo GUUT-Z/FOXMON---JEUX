@@ -67,14 +67,11 @@ public class Carte
 
     public bool EstHauteHerbe(int x, int y)
     {
-        if (x < 0 || y < 0 || x >= Largeur || y >= Hauteur || (grille[x, y] == '*'))
+        if (x < 0 || y < 0 || x >= Largeur || y >= Hauteur)
         {
             return true;
         }
-        else
-        {
-            return false;
-        }
+            return grille[x,y] == '*';
     }
 }
 
@@ -119,16 +116,42 @@ public class Dresseur
             return null;
         }
     }
-    public bool Fuir()
+
+	 public bool Capturer(Foxmon cible)
     {
-        Console.touche = Console.ReadKey(true).Key;
-        if (touche == ConsoleKey.Escape)
+        if (cible.PV < cible.PVM / 4 && Equipe.Count < 6)
         {
-            Console.WriteLine($"T'as fuis le combat.");
+            Equipe.Add(cible);
+            Console.WriteLine($"{Nom} a capturé {cible.Nom} !");
             return true;
         }
-        return false;
+        else
+        {
+            Console.WriteLine($"{Nom} a échoué à capturer {cible.Nom}.");
+            return false;
+        }
     }
+	
+    public bool Fuir()
+	{
+    ConsoleKey touche = Console.ReadKey(true).Key;
+    if (touche == ConsoleKey.Escape)
+    {
+        Console.WriteLine("T'as fui le combat.");
+        return true;
+    }
+    return false;
+	}
+
+	public Foxmon ProchainFoxmonDisponible()
+	{
+		foreach(var f in Equipe)
+		{
+			if(f.PV > 0)
+				return f;
+		}
+		return Equipe[0];
+	}
 }
 public class Foxmon
 {
@@ -183,21 +206,6 @@ public class Foxmon
             cible.PV = 0;
         }
     }
-
-    public bool Capturer(Foxmon cible)
-    {
-        if (cible.PV < cible.PVM / 4 && Equipe.Count < 6)
-        {
-            Equipe.Add(cible);
-            Console.WriteLine($"{Nom} a capturé {cible.Nom} !");
-            return true;
-        }
-        else
-        {
-            Console.WriteLine($"{Nom} a échoué à capturer {cible.Nom}.");
-            return false;
-        }
-    }
 }
 
 public class Program
@@ -206,15 +214,32 @@ public class Program
     {
         Carte carte1 = new Carte();
         Dresseur joueur = new Dresseur("babacar", 1, 1);
-        Foxmon fox1 = new Foxmon("Dracofeu", 100, 100, 5, 10, "Feu");
-        joueur.AjouterSiPossible(fox1);
 
+        Foxmon fox1 = new Foxmon("Pyrolion", 100, 100, 5, 10, 20, "feu");
+		Foxmon fox2 = new Foxmon("Aquafluff", 90, 90, 4, 9, 18, "Eau");
+		Foxmon fox3 = new Foxmon("Leafling", 80, 80, 3, 8, 15, "plante");
+		Foxmon fox4 = new Foxmon("Frostrix", 85, 85, 4, 7, 17, "Glace"); 
+		Foxmon fox5 = new Foxmon("Ironfang", 95, 95, 5, 6, 19, "Métal");
+		Foxmon fox6 = new Foxmon("Zippit", 70, 70, 3, 12, 16, "Électrique");
+
+        joueur.AjouterSiPossible(fox1);
+		joueur.AjouterSiPossible(fox2);
+		joueur.AjouterSiPossible(fox3);
+		joueur.AjouterSiPossible(fox4);
+		joueur.AjouterSiPossible(fox5);
+		joueur.AjouterSiPossible(fox6);
+
+		Random rnd = new Random();
         //Liste de foxmon sauvage
         List<Foxmon> FoxmonsSauvages = new List<Foxmon>
         {
-            new Foxmon("Bulbizarre", 80, 80, 3, 8, "Plante"),
-            new Foxmon("Salamèche", 70, 70, 2, 9, "Feu"),
-            new Foxmon("Carapuce", 90, 90, 4, 7, "Eau"),
+            new Foxmon("Emberpaw", 70, 70, 2, 9, 16, "feu"),
+            new Foxmon("Bubbluff", 60, 60, 2, 8, 14,"Eau"),
+            new Foxmon("Spriggle", 75, 75, 3, 7, 12,"Plante"),
+			new Foxmon("Rockpaw", 80, 80, 4, 6, 18,"Roche"),
+			new Foxmon("zippit", 65, 65, 3, 12, 15,"Electrique"),
+			new Foxmon("Glaciraptor", 80, 80, 3, 7, 15, "Glace"),
+			new Foxmon("Steelbite", 85, 85, 4, 6, 18, "Métal"),
         };
 
         Console.CursorVisible = false; // optionnel (cache le curseur)
@@ -255,85 +280,87 @@ public class Program
                 joueur.X = newX;
                 joueur.Y = newY;
 
-                if (carte1.EstHauteHerbe(newX, newY))
-                {
-                    Random rnd = new Random();
-                    int chance = rnd.Next(0, 100);
-                    if (chance <= 50)
-                    {
-                        enCombat = true;
+                if (carte1.EstHauteHerbe(newX, newY) && rnd.Next(100) < 50)
+				{
+					enCombat = true;
+				}
+				if (enCombat == true)
+				{
+					Console.Clear();
+					
+					Foxmon monFoxmon = joueur.PremierFoxmon();
+					//gestion des foxmons sauvages
+					if(monFoxmon != null)
+					{
+						Foxmon foxmonSauvage = FoxmonsSauvages[rnd.Next(FoxmonsSauvages.Count)];
+						Foxmon foxmonsauvage = new Foxmon(
+							foxmonSauvage.Nom,
+							foxmonSauvage.PV,
+							foxmonSauvage.PVM,
+							foxmonSauvage.LVL,
+							foxmonSauvage.Speed,
+							foxmonSauvage.Degats,
+							foxmonSauvage.TypeElementaire
+						); 
 
-                    }
+						while(enCombat)
+						{
+							Console.Clear();
 
-                }
-            }
-            if (enCombat == true)
-            {
-                Console.Clear();
+							Console.WriteLine($"Un {foxmonsauvage.Nom} sauvage apparaît !");
+							Console.WriteLine($"Combattre avec {monFoxmon.Nom}");
+							Console.WriteLine("");
 
-                Foxmon monFoxmon = joueur.PremierFoxmon();
-                //gestion des foxmons sauvages
-                Random rnd = new Random();
-                int Randomfoxmon = rnd.Next(FoxmonsSauvages.Count);
-                Foxmon foxmonSauvage = FoxmonsSauvages[Randomfoxmon];
-                Foxmon foxmonsauvage = new Foxmon(
-                    foxmonSauvage.Nom,
-                    foxmonSauvage.PV,
-                    foxmonSauvage.PVM,
-                    foxmonSauvage.LVL,
-                    foxmonSauvage.Speed,
-                    foxmonSauvage.TypeElementaire
-                ); ;
+							Console.WriteLine("A = Attaquer");
+							Console.WriteLine("C = Capturer");
+							Console.WriteLine("Espace = Fuir");
 
-                if (monFoxmon != null)
-                {
-                    Console.WriteLine($"Un {foxmonsauvage.Nom} sauvage apparaît !");
-                    Console.WriteLine($"Combattre avec {monFoxmon.Nom}");
-                    Console.WriteLine("");
+							ConsoleKey action = Console.ReadKey(true).Key;
 
-                    Console.WriteLine("A = Attaquer");
-                    Console.WriteLine("Espace = Fuir");
+							if (action == ConsoleKey.A)
+							{
+								monFoxmon.Attaquer(foxmonsauvage);
+								Console.WriteLine($"{monFoxmon.Nom} attaque {foxmonsauvage.Nom} !");
+								Console.WriteLine($"{foxmonsauvage.Nom} a {foxmonsauvage.PV} PV restants.");
 
-                    ConsoleKey action = Console.ReadKey(true).Key;
-                    if (action == ConsoleKey.A)
-                    {
-                        monFoxmon.Attaquer(foxmonsauvage);
-                        Console.WriteLine($"{monFoxmon.Nom} attaque {foxmonsauvage.Nom} !");
-                        Console.WriteLine($"{foxmonsauvage.Nom} a {foxmonsauvage.PV} PV restants.");
-
-                        if (foxmonsauvage.PV <= 0)
-                        {
-                            Console.WriteLine($"{foxmonsauvage.Nom} est vaincu !");
-                            enCombat = false;
-                            Console.Clear();
-                            carte1.Afficher();
-                        }
-                        else if (action == ConsoleKey.Spacebar)
-                        {
-                            Console.WriteLine("Vous fuyez !");
-                            enCombat = false;
-                            Console.Clear();
-                            carte1.Afficher();
-                        }
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("pas de Foxmon disponible!!!");
-                }
-                Console.ReadKey(true);
-
-                if (fuir())
-                {
-                    enCombat = false;
-                    Console.Clear();
-                    carte1.Afficher();
-                }
-            }
-            // Redessiner le joueur à la nouvelle position
-            Console.SetCursorPosition(joueur.X, joueur.Y);
-            Console.Write('P');
-        }
-    }
-
+								if (foxmonsauvage.PV <= 0)
+								{
+									Console.WriteLine($"{foxmonsauvage.Nom} est vaincu !");
+									enCombat = false;
+								}
+								else
+								{
+									foxmonSauvage.Attaquer(monFoxmon);
+									Console.WriteLine($"{foxmonSauvage.Nom} contre-attaque !");
+									Console.WriteLine($"Il reste {monFoxmon.PV} PV à ton {monFoxmon.Nom}");
+								}
+							}
+							else if (action == ConsoleKey.Spacebar)
+							{
+								Console.WriteLine("Vous fuyez !");
+								enCombat = false;
+								
+							}
+							else if(action == ConsoleKey.C)
+							{
+								bool capture = joueur.Capturer(foxmonsauvage);
+								if(capture)
+								{
+									enCombat = false;
+									Console.WriteLine($"Vous avez capturer {foxmonsauvage.Nom}");
+								}
+							}
+							Console.ReadKey(true);
+						}               
+					}
+					else
+					{
+						Console.WriteLine("pas de Foxmon disponible!!!");
+						Console.ReadKey(true);
+						enCombat = false;
+					}
+				}
+			} 
+		}	   
+	}	
 }
